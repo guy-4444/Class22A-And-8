@@ -12,6 +12,90 @@ import java.util.regex.Pattern;
 
 public class Validator {
 
+    public static class Builder {
+        private TextInputLayout textInputLayout;
+        private ArrayList<Watcher> watchers = new ArrayList<>();
+        private boolean isAlreadyBuild = false;
+
+        public static Builder make(@NonNull TextInputLayout textInputLayout) {
+            return new Builder(textInputLayout);
+        }
+
+        private Builder(@NonNull TextInputLayout textInputLayout) {
+            this.textInputLayout = textInputLayout;
+        }
+
+        public Builder addWatcher(Watcher watcher) {
+            if (!isAlreadyBuild) {
+                this.watchers.add(watcher);
+            }
+            return this;
+        }
+
+        public Validator build() {
+            if (!isAlreadyBuild) {
+                isAlreadyBuild = true;
+                Validator v = addValidator(textInputLayout, watchers);
+                return v;
+            }
+            return null;
+        }
+    }
+
+    private static Validator addValidator(TextInputLayout textInputLayout, ArrayList<Watcher> watchers) {
+        Validator v = new Validator(textInputLayout, watchers);
+        return v;
+    }
+
+    private TextInputLayout textInputLayout;
+    private ArrayList<Watcher> watchers;
+
+    private Validator(TextInputLayout textInputLayout, ArrayList<Watcher> watchers) {
+        this.textInputLayout = textInputLayout;
+        this.watchers = watchers;
+
+        textInputLayout.getEditText().addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String input = charSequence.toString();
+                String result = check(input);
+                textInputLayout.setError(result);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+    }
+
+    public String getError() {
+        String input = textInputLayout.getEditText().getText().toString();
+        return check(input);
+    }
+
+    public boolean validateIt() {
+        String input = textInputLayout.getEditText().getText().toString();
+        return check(input).equals("");
+    }
+
+    private String check(String input) {
+        boolean result = true;
+        for (Watcher watcher : watchers) {
+            result = watcher.privateCheck(input);
+            if (!result) {
+                return watcher.error;
+            }
+        }
+        return "";
+    }
+
+
     public abstract static class Watcher {
 
         private String error;
@@ -147,66 +231,4 @@ public class Validator {
             return true;
         }
     }
-
-    public static class Builder {
-        private TextInputLayout textInputLayout;
-        private ArrayList<Watcher> watchers = new ArrayList<>();
-        private boolean isAlreadyBuild = false;
-
-        public static Builder make(@NonNull TextInputLayout textInputLayout) {
-            return new Builder(textInputLayout);
-        }
-
-        private Builder(@NonNull TextInputLayout textInputLayout) {
-            this.textInputLayout = textInputLayout;
-        }
-
-        public Builder addWatcher(Watcher watcher) {
-            if (!isAlreadyBuild) {
-                this.watchers.add(watcher);
-            }
-            return this;
-        }
-
-        public Builder build() {
-            if (!isAlreadyBuild) {
-                isAlreadyBuild = true;
-                addValidator(textInputLayout, watchers);
-            }
-            return this;
-        }
-    }
-
-    private static void addValidator(TextInputLayout textInputLayout, ArrayList<Watcher> watchers) {
-        textInputLayout.getEditText().addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                String input = charSequence.toString();
-
-                boolean result = true;
-                for (Watcher watcher : watchers) {
-                    result = watcher.privateCheck(input);
-                    if (!result) {
-                        textInputLayout.setError(watcher.error);
-                        break;
-                    }
-                }
-
-                if (result) {
-                    textInputLayout.setError("");
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-    }
-
 }

@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -23,6 +24,9 @@ public class Activity_Form extends AppCompatActivity {
     private TextInputLayout form_EDT_comPart;
     private MaterialButton form_BTN_submit;
 
+    Validator v1;
+    Validator v2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,15 +39,17 @@ public class Activity_Form extends AppCompatActivity {
 
         form_BTN_submit.setOnClickListener(view -> submit());
 
-        Validator.Builder
+        v1 = Validator.Builder
                 .make(form_EDT_salary)
                 .addWatcher(new Watcher_Number("Not Number"))
                 .addWatcher(new Watcher_Positive("Not positive"))
                 .addWatcher(new Watcher_LessThan("Bigger than 100", 100))
                 .build();
 
+        boolean isGood = v1.validateIt();
 
-        Validator.Builder
+
+        v2 = Validator.Builder
                 .make(form_EDT_base)
                 .addWatcher(new Watcher_MaximumOfLetter("Wrong Input", '1', 3))
                 .addWatcher(new Watcher_Email("Nor Email"))
@@ -61,6 +67,7 @@ public class Activity_Form extends AppCompatActivity {
     }
 
     private void submit() {
-
+        Log.d("pttt", "V1= " + v1.validateIt() + " - " + v1.getError());
+        Log.d("pttt", "V2= " + v2.validateIt() + " - " + v2.getError());
     }
 }
